@@ -1,0 +1,11 @@
+Your selected colors:
+
+    Text: #000000 - rgb(0, 0, 0) - hsl(0, 0%, 0%)
+    Background: #ebebea - rgb(235, 235, 234) - hsl(60, 2%, 92%)
+    Primary: #dedede - rgb(222, 222, 222) - hsl(0, 0%, 87%)
+    Secondary: #dedede - rgb(222, 222, 222) - hsl(0, 0%, 87%)
+    Accent: #dedede - rgb(222, 222, 222) - hsl(0, 0%, 87%)
+
+Realtime Colors link for selected colors: https://www.realtimecolors.com/?colors=000000-ebebea-dedede-dedede-dedede&fonts=Roboto%20Slab-Roboto%20Slab
+
+Thanks for using RealtimeColors.com!

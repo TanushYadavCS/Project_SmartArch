@@ -1,0 +1,17 @@
+[[pages]]
+path = "./Project_SmartArch/main/pages/Telemetry.py"
+name = "Telemetry"
+
+[[pages]]
+path = "./Project_SmartArch/main/pages/Model.py"
+name = "Model"
+
+[[pages]]
+path = "./Project_SmartArch/main/pages/Design.py"
+name = "Design"
+
+[[pages]]
+path = "./Project_SmartArch/main/pages/Renders.py"
+name = "Renders"
+
+
