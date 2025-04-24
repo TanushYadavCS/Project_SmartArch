@@ -1,0 +1,15 @@
+streamlit_card
+st_pages
+pandas
+weatherapi
+folium
+streamlit_folium
+numpy
+plotly.express
+plotly.graph_objects
+datetime
+calendar
+streamlit.components.v1
+base64
+random
+json
