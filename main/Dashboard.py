@@ -711,11 +711,6 @@ if design_question:
                     4. Design flexible spaces that can adapt to changing needs and climate conditions over time.
                     """)
 
-# Add 3D visualization option
-st.sidebar.markdown("---")
-st.sidebar.markdown("### 3D Visualization")
-if st.sidebar.button("Generate 3D Model"):
-    st.sidebar.success("3D model generation requested. This feature will connect to BIM tools in the full version.")
     
 # Add sustainability metrics
 st.sidebar.markdown("---")

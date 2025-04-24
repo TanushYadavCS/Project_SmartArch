@@ -1,4 +1,8 @@
 import streamlit as st
+import streamlit.components.v1 as components
+import base64
+import random
+import json
 st.header('Design')
 st.logo(image="""<svg id="e8Q4qfY0rtj1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 3300 675" shape-rendering="geometricPrecision" text-rendering="geometricPrecision" project-id="367bdef0eae947459de4febdd130057f" export-id="01817a86147d4ac9a563fa762f7ec3a5" cached="false"><text dx="0" dy="0" font-family="&quot;e8Q4qfY0rtj1:::Roboto Slab&quot;" font-size="600" font-weight="700" transform="translate(80.479961 630.157812)" fill="#fff" stroke-width="0"><tspan y="0" font-weight="700" stroke-width="0"><![CDATA[
 Smart
@@ -18,3 +22,1110 @@ Arch
 ]]></style>
 </svg>""")
 st.divider()
+
+
+# Title section
+st.markdown('<div class="title-container"><h1 class="title-text">Parametric 3D Architecture Generator</h1></div>', unsafe_allow_html=True)
+
+st.markdown('<p class="subtitle">Create stunning architectural visualizations with simple controls or text descriptions.</p>', unsafe_allow_html=True)
+
+# Initialize session state
+if 'building_settings' not in st.session_state:
+    st.session_state.building_settings = {
+        'height': 30,
+        'width': 15,
+        'depth': 15,
+        'floors': 10,
+        'windows_per_floor': 4,
+        'color': '#888888',
+        'roof_style': 'flat',
+        'facade_style': 'modern',
+        'surroundings': 'urban',
+        'time_of_day': 'day',
+        'material': 'concrete',
+        'has_balconies': False,
+        'has_garden': False,
+        'custom_features': ''
+    }
+
+# Sidebar for app navigation
+with st.sidebar:
+    st.image("https://via.placeholder.com/320x200?text=Architecture+Generator", use_container_width=True)
+    
+    st.markdown("## Design Mode")
+    mode = st.radio("Choose your design approach:", 
+                    ["Parameter Controls", "Text Description", "Style Presets"])
+    
+    st.markdown("---")
+    st.markdown("## Render Quality")
+    quality = st.select_slider("Select render quality:", 
+                              options=["Preview", "Standard", "High", "Ultra"])
+    
+    st.markdown("---")
+    st.markdown("## Export Options")
+    export_format = st.selectbox("Export Format:", ["PNG Image", "3D Model (GLB)", "Scene Settings (JSON)"])
+    
+    if st.button("Export Design"):
+        st.success("Design exported! (This would download the file in a real app)")
+
+# Main content
+if mode == "Parameter Controls":
+    st.markdown('<div class="parameter-section">', unsafe_allow_html=True)
+    st.markdown("## Building Parameters")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.session_state.building_settings['height'] = st.slider("Building Height (m)", 5, 100, st.session_state.building_settings['height'])
+        st.session_state.building_settings['width'] = st.slider("Building Width (m)", 5, 50, st.session_state.building_settings['width'])
+        st.session_state.building_settings['depth'] = st.slider("Building Depth (m)", 5, 50, st.session_state.building_settings['depth'])
+        st.session_state.building_settings['floors'] = st.slider("Number of Floors", 1, 30, st.session_state.building_settings['floors'])
+        st.session_state.building_settings['windows_per_floor'] = st.slider("Windows per Floor", 0, 20, st.session_state.building_settings['windows_per_floor'])
+    
+    with col2:
+        st.session_state.building_settings['color'] = st.color_picker("Building Color", st.session_state.building_settings['color'])
+        st.session_state.building_settings['roof_style'] = st.selectbox("Roof Style", 
+                                                                    ["flat", "pitched", "dome", "terraced", "green"], 
+                                                                    ["flat", "pitched", "dome", "terraced", "green"].index(st.session_state.building_settings['roof_style']))
+        st.session_state.building_settings['facade_style'] = st.selectbox("Facade Style", 
+                                                                      ["modern", "classical", "brutalist", "postmodern", "high-tech"], 
+                                                                      ["modern", "classical", "brutalist", "postmodern", "high-tech"].index(st.session_state.building_settings['facade_style']))
+        st.session_state.building_settings['material'] = st.selectbox("Primary Material", 
+                                                                  ["concrete", "glass", "brick", "stone", "wood", "metal"], 
+                                                                  ["concrete", "glass", "brick", "stone", "wood", "metal"].index(st.session_state.building_settings['material']))
+    
+    st.markdown("## Environment Settings")
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.session_state.building_settings['surroundings'] = st.selectbox("Surroundings", 
+                                                                      ["urban", "suburban", "rural", "waterfront", "mountainous"], 
+                                                                      ["urban", "suburban", "rural", "waterfront", "mountainous"].index(st.session_state.building_settings['surroundings']))
+        st.session_state.building_settings['time_of_day'] = st.selectbox("Time of Day", 
+                                                                     ["dawn", "day", "dusk", "night"], 
+                                                                     ["dawn", "day", "dusk", "night"].index(st.session_state.building_settings['time_of_day']))
+    
+    with col2:
+        st.session_state.building_settings['has_balconies'] = st.checkbox("Include Balconies", st.session_state.building_settings['has_balconies'])
+        st.session_state.building_settings['has_garden'] = st.checkbox("Include Garden/Landscape", st.session_state.building_settings['has_garden'])
+    
+    st.session_state.building_settings['custom_features'] = st.text_area("Custom Features (describe any additional elements)", st.session_state.building_settings['custom_features'])
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+
+elif mode == "Text Description":
+    st.markdown('<div class="parameter-section">', unsafe_allow_html=True)
+    st.markdown("## Describe Your Building")
+    
+    prompt = st.text_area("Enter a detailed description of your dream architecture:", 
+                         """A 40-story glass skyscraper with a curved facade, blue-tinted windows, and a rooftop garden. 
+The building has a modern style with some high-tech elements like solar panels on the south face. 
+It's situated in an urban environment with a small plaza in front.""", 
+                         height=150)
+    
+    # Simple prompt analysis (in a real app, this would use NLP or AI)
+    st.session_state.building_settings['height'] = 40 if "40" in prompt or "forty" in prompt.lower() else random.randint(10, 60)
+    st.session_state.building_settings['material'] = "glass" if "glass" in prompt.lower() else "concrete"
+    st.session_state.building_settings['has_garden'] = "garden" in prompt.lower() or "green" in prompt.lower()
+    st.session_state.building_settings['facade_style'] = "modern" if "modern" in prompt.lower() else "high-tech" if "high-tech" in prompt.lower() else "classical"
+    st.session_state.building_settings['color'] = "#ADD8E6" if "blue" in prompt.lower() else "#888888"
+    
+    st.markdown("### Detected Features")
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.info(f"Height: ~{st.session_state.building_settings['height']} floors")
+        st.info(f"Primary Material: {st.session_state.building_settings['material']}")
+        st.info(f"Green Elements: {'Yes' if st.session_state.building_settings['has_garden'] else 'No'}")
+    
+    with col2:
+        st.info(f"Architectural Style: {st.session_state.building_settings['facade_style']}")
+        st.info(f"Color Scheme: {st.session_state.building_settings['color']}")
+        st.info(f"Environment: {'Urban' if 'urban' in prompt.lower() else 'Unspecified'}")
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+
+elif mode == "Style Presets":
+    st.markdown('<div class="parameter-section">', unsafe_allow_html=True)
+    st.markdown("## Architectural Style Presets")
+    
+    preset_styles = {
+        "Modern Skyscraper": {
+            'height': 70,
+            'width': 20,
+            'depth': 20,
+            'floors': 25,
+            'windows_per_floor': 12,
+            'color': '#71A6D2',
+            'roof_style': 'flat',
+            'facade_style': 'modern',
+            'surroundings': 'urban',
+            'time_of_day': 'day',
+            'material': 'glass',
+            'has_balconies': False,
+            'has_garden': False,
+            'custom_features': 'Sleek glass facade with minimal ornamentation'
+        },
+        "Classical Museum": {
+            'height': 20,
+            'width': 40,
+            'depth': 30,
+            'floors': 3,
+            'windows_per_floor': 8,
+            'color': '#E8DCC9',
+            'roof_style': 'dome',
+            'facade_style': 'classical',
+            'surroundings': 'urban',
+            'time_of_day': 'day',
+            'material': 'stone',
+            'has_balconies': False,
+            'has_garden': True,
+            'custom_features': 'Grand columns at entrance, symmetrical design'
+        },
+        "Sustainable Office": {
+            'height': 35,
+            'width': 25,
+            'depth': 25,
+            'floors': 12,
+            'windows_per_floor': 14,
+            'color': '#7B9F5F',
+            'roof_style': 'green',
+            'facade_style': 'high-tech',
+            'surroundings': 'suburban',
+            'time_of_day': 'day',
+            'material': 'glass',
+            'has_balconies': True,
+            'has_garden': True,
+            'custom_features': 'Living walls, solar panels, rainwater collection'
+        },
+        "Brutalist Government Building": {
+            'height': 30,
+            'width': 35,
+            'depth': 35,
+            'floors': 8,
+            'windows_per_floor': 6,
+            'color': '#8A8A8A',
+            'roof_style': 'flat',
+            'facade_style': 'brutalist',
+            'surroundings': 'urban',
+            'time_of_day': 'day',
+            'material': 'concrete',
+            'has_balconies': False,
+            'has_garden': False,
+            'custom_features': 'Geometric concrete patterns, minimal windows'
+        },
+        "Futuristic Tower": {
+            'height': 90,
+            'width': 30,
+            'depth': 30,
+            'floors': 30,
+            'windows_per_floor': 16,
+            'color': '#C5C5C5',
+            'roof_style': 'dome',
+            'facade_style': 'high-tech',
+            'surroundings': 'urban',
+            'time_of_day': 'night',
+            'material': 'metal',
+            'has_balconies': True,
+            'has_garden': True,
+            'custom_features': 'Twisted form, programmable LED façade lighting'
+        },
+        "Mediterranean Villa": {
+            'height': 10,
+            'width': 20,
+            'depth': 15,
+            'floors': 2,
+            'windows_per_floor': 6,
+            'color': '#F7E7CE',
+            'roof_style': 'pitched',
+            'facade_style': 'classical',
+            'surroundings': 'waterfront',
+            'time_of_day': 'dusk',
+            'material': 'stone',
+            'has_balconies': True,
+            'has_garden': True,
+            'custom_features': 'Terra cotta roof tiles, arched windows, courtyard'
+        }
+    }
+    
+    # Display presets in a grid
+    col1, col2 = st.columns(2)
+    
+    preset_list = list(preset_styles.keys())
+    for i, preset_name in enumerate(preset_list):
+        if i % 2 == 0:
+            with col1:
+                if st.button(f"{preset_name}", key=f"preset_{i}"):
+                    st.session_state.building_settings = preset_styles[preset_name]
+                    st.success(f"Applied {preset_name} preset!")
+        else:
+            with col2:
+                if st.button(f"{preset_name}", key=f"preset_{i}"):
+                    st.session_state.building_settings = preset_styles[preset_name]
+                    st.success(f"Applied {preset_name} preset!")
+    
+    st.markdown("## Current Style Settings")
+    st.json(st.session_state.building_settings)
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# Generate button
+gen_col1, gen_col2, gen_col3 = st.columns([1, 2, 1])
+with gen_col2:
+    generate_btn = st.button("Generate 3D Building")
+
+# Convert building settings to URL-friendly format
+settings_json = json.dumps(st.session_state.building_settings)
+settings_base64 = base64.b64encode(settings_json.encode()).decode()
+
+# 3D Rendering Area
+st.markdown("<h2 style='text-align: center;'>3D Visualization</h2>", unsafe_allow_html=True)
+
+# Only show the 3D visualization if the generate button was clicked
+if generate_btn or st.session_state.get('was_generated', False):
+    st.session_state.was_generated = True
+    
+    # Embed the Three.js code directly into Streamlit with advanced features
+    components.html(f"""
+      <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Advanced Parametric 3D Building</title>
+        <style>
+            body {{ margin: 0; overflow: hidden; }}
+            canvas {{ display: block; }}
+            .info-panel {{
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                background: rgba(0, 0, 0, 0.7);
+                color: white;
+                padding: 10px;
+                border-radius: 5px;
+                font-family: Arial, sans-serif;
+                font-size: 12px;
+                max-width: 200px;
+            }}
+            .controls {{
+                position: absolute;
+                bottom: 10px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: rgba(0, 0, 0, 0.7);
+                color: white;
+                padding: 5px 10px;
+                border-radius: 5px;
+                font-family: Arial, sans-serif;
+                font-size: 12px;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="info-panel">
+            <h3>Building Information</h3>
+            <div id="building-stats"></div>
+        </div>
+        <div class="controls">
+            Left-click: Rotate | Right-click: Pan | Scroll: Zoom | Double-click: View angle
+        </div>
+        
+        <script src="https://cdn.jsdelivr.net/npm/three@0.144.0/build/three.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/three@0.144.0/examples/js/controls/OrbitControls.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/three@0.144.0/examples/js/loaders/GLTFLoader.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/three@0.144.0/examples/js/loaders/RGBELoader.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/three@0.144.0/examples/js/environments/RoomEnvironment.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/three@0.144.0/examples/js/postprocessing/EffectComposer.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/three@0.144.0/examples/js/postprocessing/RenderPass.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/three@0.144.0/examples/js/postprocessing/ShaderPass.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/three@0.144.0/examples/js/postprocessing/OutlinePass.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/three@0.144.0/examples/js/shaders/CopyShader.js"></script>
+
+        <script>
+            // Parse building settings
+            const settingsJson = atob("{settings_base64}");
+            const settings = JSON.parse(settingsJson);
+            
+            // Update info panel
+            document.getElementById('building-stats').innerHTML = `
+                <p>Height: ${{settings.height}}m</p>
+                <p>Floors: ${{settings.floors}}</p>
+                <p>Style: ${{settings.facade_style}}</p>
+                <p>Material: ${{settings.material}}</p>
+                <p>Environment: ${{settings.surroundings}}</p>
+            `;
+            
+            // Initialize Three.js scene, camera, and renderer
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+            
+            const renderer = new THREE.WebGLRenderer({{ antialias: true }});
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.0;
+            document.body.appendChild(renderer.domElement);
+            
+            // Set up environment lighting based on time of day
+            function setupLighting(timeOfDay) {{
+                // Clear existing lights
+                scene.children.forEach(child => {{
+                    if (child instanceof THREE.Light) {{
+                        scene.remove(child);
+                    }}
+                }});
+                
+                // Add ambient light
+                let ambientIntensity, ambientColor;
+                
+                switch(timeOfDay) {{
+                    case 'dawn':
+                        ambientIntensity = 0.5;
+                        ambientColor = 0xFFB74D; // Orange
+                        break;
+                    case 'day':
+                        ambientIntensity = 0.8;
+                        ambientColor = 0xFFFFFF; // White
+                        break;
+                    case 'dusk':
+                        ambientIntensity = 0.5;
+                        ambientColor = 0xE57373; // Red-orange
+                        break;
+                    case 'night':
+                        ambientIntensity = 0.3;
+                        ambientColor = 0x3D5AFE; // Blue
+                        break;
+                    default:
+                        ambientIntensity = 0.7;
+                        ambientColor = 0xFFFFFF;
+                }}
+                
+                const ambientLight = new THREE.AmbientLight(ambientColor, ambientIntensity);
+                scene.add(ambientLight);
+                
+                // Add directional light (sun/moon)
+                let directionalIntensity, directionalColor, directionalPosition;
+                
+                switch(timeOfDay) {{
+                    case 'dawn':
+                        directionalIntensity = 0.8;
+                        directionalColor = 0xFFA726; // Orange
+                        directionalPosition = new THREE.Vector3(50, 30, 50);
+                        break;
+                    case 'day':
+                        directionalIntensity = 1.2;
+                        directionalColor = 0xFFFFFF; // White
+                        directionalPosition = new THREE.Vector3(50, 80, 50);
+                        break;
+                    case 'dusk':
+                        directionalIntensity = 0.8;
+                        directionalColor = 0xE57373; // Red-orange
+                        directionalPosition = new THREE.Vector3(-50, 30, -50);
+                        break;
+                    case 'night':
+                        directionalIntensity = 0.3;
+                        directionalColor = 0xCFD8DC; // Silver
+                        directionalPosition = new THREE.Vector3(0, 100, 0);
+                        break;
+                    default:
+                        directionalIntensity = 1.0;
+                        directionalColor = 0xFFFFFF;
+                        directionalPosition = new THREE.Vector3(50, 80, 50);
+                }}
+                
+                const directionalLight = new THREE.DirectionalLight(directionalColor, directionalIntensity);
+                directionalLight.position.copy(directionalPosition);
+                directionalLight.castShadow = true;
+                
+                // Adjust shadow camera to cover the scene
+                directionalLight.shadow.camera.left = -100;
+                directionalLight.shadow.camera.right = 100;
+                directionalLight.shadow.camera.top = 100;
+                directionalLight.shadow.camera.bottom = -100;
+                directionalLight.shadow.camera.near = 0.5;
+                directionalLight.shadow.camera.far = 500;
+                directionalLight.shadow.mapSize.width = 2048;
+                directionalLight.shadow.mapSize.height = 2048;
+                
+                scene.add(directionalLight);
+                
+                // Add point lights for night scene
+                if (timeOfDay === 'night') {{
+                    // Building lights
+                    const buildingLights = [];
+                    const buildingHeight = settings.height;
+                    const buildingWidth = settings.width;
+                    const buildingDepth = settings.depth;
+                    
+                    // Create lights at different positions on the building
+                    for (let i = 0; i < 5; i++) {{
+                        const pointLight = new THREE.PointLight(0xFFEB3B, 0.8, 30);
+                        pointLight.position.set(
+                            (Math.random() - 0.5) * buildingWidth, 
+                            Math.random() * buildingHeight - buildingHeight/2, 
+                            buildingDepth/2 + 1
+                        );
+                        buildingLights.push(pointLight);
+                        scene.add(pointLight);
+                    }}
+                }}
+                
+                // Set background based on time of day
+                switch(timeOfDay) {{
+                    case 'dawn':
+                        scene.background = new THREE.Color(0xFFB74D);
+                        break;
+                    case 'day':
+                        scene.background = new THREE.Color(0x87CEEB);
+                        break;
+                    case 'dusk':
+                        scene.background = new THREE.Color(0xE57373);
+                        break;
+                    case 'night':
+                        scene.background = new THREE.Color(0x0D47A1);
+                        break;
+                    default:
+                        scene.background = new THREE.Color(0x87CEEB);
+                }}
+            }}
+            
+            // Create ground/environment
+            function createEnvironment(environmentType) {{
+                // Create ground
+                const groundSize = 400;
+                const groundGeometry = new THREE.PlaneGeometry(groundSize, groundSize);
+                let groundMaterial;
+                
+                switch(environmentType) {{
+                    case 'urban':
+                        groundMaterial = new THREE.MeshLambertMaterial({{ color: 0x555555 }}); // Asphalt
+                        break;
+                    case 'suburban':
+                        groundMaterial = new THREE.MeshLambertMaterial({{ color: 0x91E06C }}); // Green
+                        break;
+                    case 'rural':
+                        groundMaterial = new THREE.MeshLambertMaterial({{ color: 0xBCAAA4 }}); // Dirt/soil
+                        break;
+                    case 'waterfront':
+                        groundMaterial = new THREE.MeshLambertMaterial({{ color: 0x42A5F5 }}); // Water
+                        break;
+                    case 'mountainous':
+                        groundMaterial = new THREE.MeshLambertMaterial({{ color: 0x8D6E63 }}); // Mountain
+                        break;
+                    default:
+                        groundMaterial = new THREE.MeshLambertMaterial({{ color: 0x91E06C }});
+                }}
+                
+                const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+                ground.rotation.x = -Math.PI / 2;
+                ground.position.y = -settings.height/2 - 0.5;
+                ground.receiveShadow = true;
+                scene.add(ground);
+                
+                // Add environment elements based on type
+                switch(environmentType) {{
+                    case 'urban':
+                        // Add roads
+                        const roadGeometry = new THREE.PlaneGeometry(10, 100);
+                        const roadMaterial = new THREE.MeshLambertMaterial({{ color: 0x333333 }});
+                        const road = new THREE.Mesh(roadGeometry, roadMaterial);
+                        road.rotation.x = -Math.PI / 2;
+                        road.position.y = -settings.height/2 - 0.4;
+                        road.position.z = -20;
+                        scene.add(road);
+                        
+                        // Add small buildings
+                        for (let i = 0; i < 5; i++) {{
+                            const smallBuildingHeight = Math.random() * 30 + 10;
+                            const smallBuildingGeometry = new THREE.BoxGeometry(
+                                Math.random() * 10 + 5, 
+                                smallBuildingHeight, 
+                                Math.random() * 10 + 5
+                            );
+                            const smallBuildingMaterial = new THREE.MeshLambertMaterial({{ 
+                                color: Math.random() * 0xFFFFFF
+                            }});
+                            const smallBuilding = new THREE.Mesh(smallBuildingGeometry, smallBuildingMaterial);
+                            smallBuilding.position.set(
+                                (Math.random() - 0.5) * 100, 
+                                -settings.height/2 + smallBuildingHeight/2, 
+                                -50 - Math.random() * 50
+                            );
+                            smallBuilding.castShadow = true;
+                            smallBuilding.receiveShadow = true;
+                            scene.add(smallBuilding);
+                        }}
+                        break;
+                        
+                    case 'waterfront':
+                        // Add water
+                        const waterGeometry = new THREE.PlaneGeometry(200, 200);
+                        const waterMaterial = new THREE.MeshLambertMaterial({{ 
+                            color: 0x29B6F6, 
+                            transparent: true,
+                            opacity: 0.7
+                        }});
+                        const water = new THREE.Mesh(waterGeometry, waterMaterial);
+                        water.rotation.x = -Math.PI / 2;
+                        water.position.y = -settings.height/2 - 0.3;
+                        water.position.z = -50;
+                        scene.add(water);
+                        break;
+                        
+                    case 'mountainous':
+                        // Add mountain shapes
+                        for (let i = 0; i < 3; i++) {{
+                            const mountainGeometry = new THREE.ConeGeometry(
+                                30 + Math.random() * 40, 
+                                40 + Math.random() * 60, 
+                                4
+                            );
+                            const mountainMaterial = new THREE.MeshLambertMaterial({{ 
+                                color: 0x8D6E63
+                            }});
+                            const mountain = new THREE.Mesh(mountainGeometry, mountainMaterial);
+                            mountain.position.set(
+                                (Math.random() - 0.5) * 150, 
+                                -settings.height/2 + 20, 
+                                -80 - Math.random() * 50
+                            );
+                            mountain.castShadow = true;
+                            mountain.receiveShadow = true;
+                            scene.add(mountain);
+                        }}
+                        break;
+                }}
+                
+                // Add trees if garden is enabled or in rural/suburban environments
+                if (settings.has_garden || environmentType === 'rural' || environmentType === 'suburban') {{
+                    for (let i = 0; i < 12; i++) {{
+                        // Tree trunk
+                        const trunkGeometry = new THREE.CylinderGeometry(0.5, 0.8, 4, 8);
+                        const trunkMaterial = new THREE.MeshLambertMaterial({{ color: 0x8D6E63 }});
+                        const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
+                        
+                        // Tree foliage
+const foliageGeometry = new THREE.ConeGeometry(3, 6, 8);
+const foliageMaterial = new THREE.MeshLambertMaterial({{ color: 0x2E7D32 }});
+const foliage = new THREE.Mesh(foliageGeometry, foliageMaterial);
+foliage.position.y = 3;
+foliage.castShadow = true;
+
+// Create tree group
+const tree = new THREE.Group();
+tree.add(trunk);
+tree.add(foliage);
+
+// Position tree
+tree.position.set(
+    (Math.random() - 0.5) * 80,
+    -settings.height/2 + 2,
+    -20 - Math.random() * 60
+);
+
+tree.castShadow = true;
+tree.receiveShadow = true;
+scene.add(tree);
+                    }}
+                }}
+            }}
+            
+            // Function to create parametric building based on settings
+            function createBuilding(settings) {{
+                // Create a group to hold all building parts
+                const building = new THREE.Group();
+                
+                // Convert hex color to THREE.js color
+                const colorHex = parseInt(settings.color.replace('#', '0x'), 16);
+                
+                // Initialize material based on building material type
+                let buildingMaterial;
+                
+                switch(settings.material) {{
+                    case 'glass':
+                        buildingMaterial = new THREE.MeshPhysicalMaterial({{ 
+                            color: colorHex,
+                            transparent: true,
+                            opacity: 0.8,
+                            roughness: 0.1,
+                            metalness: 0.2,
+                            reflectivity: 1.0,
+                            clearcoat: 1.0
+                        }});
+                        break;
+                    case 'concrete':
+                        buildingMaterial = new THREE.MeshStandardMaterial({{ 
+                            color: colorHex,
+                            roughness: 0.7,
+                            metalness: 0.1
+                        }});
+                        break;
+                    case 'brick':
+                        buildingMaterial = new THREE.MeshStandardMaterial({{ 
+                            color: colorHex,
+                            roughness: 0.9,
+                            metalness: 0.0
+                        }});
+                        break;
+                    case 'stone':
+                        buildingMaterial = new THREE.MeshStandardMaterial({{ 
+                            color: colorHex,
+                            roughness: 0.8,
+                            metalness: 0.1
+                        }});
+                        break;
+                    case 'wood':
+                        buildingMaterial = new THREE.MeshStandardMaterial({{ 
+                            color: colorHex,
+                            roughness: 0.9,
+                            metalness: 0.0
+                        }});
+                        break;
+                    case 'metal':
+                        buildingMaterial = new THREE.MeshStandardMaterial({{ 
+                            color: colorHex,
+                            roughness: 0.3,
+                            metalness: 0.8
+                        }});
+                        break;
+                    default:
+                        buildingMaterial = new THREE.MeshStandardMaterial({{ 
+                            color: colorHex
+                        }});
+                }}
+                
+                // Create main building structure
+                let buildingGeometry;
+                
+                switch(settings.facade_style) {{
+                    case 'modern':
+                        buildingGeometry = new THREE.BoxGeometry(
+                            settings.width, 
+                            settings.height, 
+                            settings.depth
+                        );
+                        break;
+                    case 'classical':
+                        // Start with a box
+                        buildingGeometry = new THREE.BoxGeometry(
+                            settings.width, 
+                            settings.height, 
+                            settings.depth
+                        );
+                        break;
+                    case 'brutalist':
+                        // Blocky, angular shape
+                        buildingGeometry = new THREE.BoxGeometry(
+                            settings.width, 
+                            settings.height, 
+                            settings.depth
+                        );
+                        break;
+                    case 'postmodern':
+                        // Complex shape
+                        if (Math.random() > 0.5) {{
+                            // If postmodern, sometimes use a more unusual geometry
+                            buildingGeometry = new THREE.CylinderGeometry(
+                                settings.width / 2,
+                                settings.width / 2.5,
+                                settings.height,
+                                8
+                            );
+                        }} else {{
+                            buildingGeometry = new THREE.BoxGeometry(
+                                settings.width, 
+                                settings.height, 
+                                settings.depth
+                            );
+                        }}
+                        break;
+                    case 'high-tech':
+                        // Sleek, often curved shape
+                        if (Math.random() > 0.5) {{
+                            buildingGeometry = new THREE.CylinderGeometry(
+                                settings.width / 2,
+                                settings.width / 2,
+                                settings.height,
+                                16
+                            );
+                        }} else {{
+                            buildingGeometry = new THREE.BoxGeometry(
+                                settings.width, 
+                                settings.height, 
+                                settings.depth
+                            );
+                        }}
+                        break;
+                    default:
+                        buildingGeometry = new THREE.BoxGeometry(
+                            settings.width, 
+                            settings.height, 
+                            settings.depth
+                        );
+                }}
+                
+                // Create main building mesh
+                const mainBuilding = new THREE.Mesh(buildingGeometry, buildingMaterial);
+                mainBuilding.castShadow = true;
+                mainBuilding.receiveShadow = true;
+                building.add(mainBuilding);
+                
+                // Add roof based on roof style
+                let roofGeometry, roofMaterial, roof;
+                
+                switch(settings.roof_style) {{
+                    case 'flat':
+                        // Flat roof is just the top of the building
+                        break;
+                        
+                    case 'pitched':
+                        roofGeometry = new THREE.ConeGeometry(
+                            Math.max(settings.width, settings.depth) / 1.5, 
+                            settings.height / 5, 
+                            4
+                        );
+                        roofMaterial = new THREE.MeshLambertMaterial({{ 
+                            color: 0x8D6E63 
+                        }});
+                        roof = new THREE.Mesh(roofGeometry, roofMaterial);
+                        roof.position.y = settings.height / 2 + settings.height / 10;
+                        roof.rotation.y = Math.PI / 4;
+                        roof.castShadow = true;
+                        building.add(roof);
+                        break;
+                        
+                    case 'dome':
+                        roofGeometry = new THREE.SphereGeometry(
+                            Math.min(settings.width, settings.depth) / 2,
+                            32, 32, 
+                            0, Math.PI * 2, 
+                            0, Math.PI / 2
+                        );
+                        roofMaterial = new THREE.MeshLambertMaterial({{ 
+                            color: settings.material === 'glass' ? colorHex : 0xB0BEC5 
+                        }});
+                        roof = new THREE.Mesh(roofGeometry, roofMaterial);
+                        roof.position.y = settings.height / 2;
+                        roof.castShadow = true;
+                        building.add(roof);
+                        break;
+                        
+                    case 'terraced':
+                        // Create multiple levels for terraced roof
+                        for (let i = 0; i < 3; i++) {{
+                            const terraceSize = (3 - i) / 3;
+                            const terraceGeometry = new THREE.BoxGeometry(
+                                settings.width * terraceSize, 
+                                settings.height / 15, 
+                                settings.depth * terraceSize
+                            );
+                            const terraceMaterial = new THREE.MeshLambertMaterial({{ 
+                                color: 0xB0BEC5 
+                            }});
+                            const terrace = new THREE.Mesh(terraceGeometry, terraceMaterial);
+                            terrace.position.y = settings.height / 2 + (i + 0.5) * (settings.height / 15);
+                            terrace.castShadow = true;
+                            building.add(terrace);
+                        }}
+                        break;
+                        
+                    case 'green':
+                        // Green roof (flat with vegetation)
+                        roofGeometry = new THREE.BoxGeometry(
+                            settings.width * 0.95, 
+                            settings.height / 30, 
+                            settings.depth * 0.95
+                        );
+                        roofMaterial = new THREE.MeshLambertMaterial({{ 
+                            color: 0x2E7D32 
+                        }});
+                        roof = new THREE.Mesh(roofGeometry, roofMaterial);
+                        roof.position.y = settings.height / 2 + settings.height / 60;
+                        roof.castShadow = true;
+                        building.add(roof);
+                        
+                        // Add some vegetation elements on the roof
+                        for (let i = 0; i < 8; i++) {{
+                            const plantGeometry = new THREE.SphereGeometry(1, 8, 8);
+                            const plantMaterial = new THREE.MeshLambertMaterial({{ 
+                                color: 0x1B5E20 
+                            }});
+                            const plant = new THREE.Mesh(plantGeometry, plantMaterial);
+                            plant.position.set(
+                                (Math.random() - 0.5) * (settings.width * 0.8),
+                                settings.height / 2 + settings.height / 30 + 0.5,
+                                (Math.random() - 0.5) * (settings.depth * 0.8)
+                            );
+                            plant.castShadow = true;
+                            building.add(plant);
+                        }}
+                        break;
+                }}
+                
+                // Add windows to the building
+                const windowGeometry = new THREE.PlaneGeometry(1.5, 2);
+                const windowMaterial = new THREE.MeshPhysicalMaterial({{ 
+                    color: 0xCFD8DC, 
+                    transparent: true, 
+                    opacity: 0.8,
+                    metalness: 0.2,
+                    roughness: 0.05,
+                    reflectivity: 1.0
+                }});
+                
+                // Calculate window positions
+                const floorHeight = settings.height / settings.floors;
+                const floorCount = settings.floors;
+                
+                // Add windows to each floor
+                for (let floor = 0; floor < floorCount; floor++) {{
+                    const windowsPerFloor = settings.windows_per_floor;
+                    
+                    // Front face windows
+                    for (let w = 0; w < windowsPerFloor / 2; w++) {{
+                        const windowMesh = new THREE.Mesh(windowGeometry, windowMaterial);
+                        windowMesh.position.set(
+                            (w - (windowsPerFloor / 4 - 0.5)) * 3,
+                            -settings.height / 2 + floor * floorHeight + floorHeight / 2,
+                            settings.depth / 2 + 0.05
+                        );
+                        building.add(windowMesh);
+                    }}
+                    
+                    // Back face windows
+                    for (let w = 0; w < windowsPerFloor / 2; w++) {{
+                        const windowMesh = new THREE.Mesh(windowGeometry, windowMaterial);
+                        windowMesh.position.set(
+                            (w - (windowsPerFloor / 4 - 0.5)) * 3,
+                            -settings.height / 2 + floor * floorHeight + floorHeight / 2,
+                            -settings.depth / 2 - 0.05
+                        );
+                        windowMesh.rotation.y = Math.PI;
+                        building.add(windowMesh);
+                    }}
+                }}
+                
+                // Add balconies if enabled
+                if (settings.has_balconies) {{
+                    const balconyGeometry = new THREE.BoxGeometry(3, 0.3, 2);
+                    const balconyMaterial = new THREE.MeshLambertMaterial({{ 
+                        color: 0xE0E0E0 
+                    }});
+                    
+                    // Add balconies to some windows (every other floor)
+                    for (let floor = 1; floor < floorCount; floor += 2) {{
+                        for (let w = 0; w < Math.floor(settings.windows_per_floor / 4); w++) {{
+                            const balconyMesh = new THREE.Mesh(balconyGeometry, balconyMaterial);
+                            balconyMesh.position.set(
+                                (w * 2 - settings.windows_per_floor / 4) * 3,
+                                -settings.height / 2 + floor * floorHeight + floorHeight / 2 - 1.2,
+                                settings.depth / 2 + 1
+                            );
+                            balconyMesh.castShadow = true;
+                            building.add(balconyMesh);
+                            
+                            // Add railing to balcony
+                            const railingGeometry = new THREE.BoxGeometry(3, 1, 0.1);
+                            const railingMaterial = new THREE.MeshLambertMaterial({{ 
+                                color: 0xBDBDBD 
+                            }});
+                            const railing = new THREE.Mesh(railingGeometry, railingMaterial);
+                            railing.position.set(0, 0.6, 0.9);
+                            balconyMesh.add(railing);
+                        }}
+                    }}
+                }}
+                
+                // Add architectural elements based on style
+                switch(settings.facade_style) {{
+                    case 'classical':
+                        // Add columns at the base
+                        for (let i = 0; i < 6; i++) {{
+                            const columnGeometry = new THREE.CylinderGeometry(1, 1, floorHeight * 2, 16);
+                            const columnMaterial = new THREE.MeshLambertMaterial({{ 
+                                color: 0xEEEEEE 
+                            }});
+                            const column = new THREE.Mesh(columnGeometry, columnMaterial);
+                            column.position.set(
+                                (i - 2.5) * 4,
+                                -settings.height / 2 + floorHeight,
+                                settings.depth / 2 + 2
+                            );
+                            column.castShadow = true;
+                            building.add(column);
+                        }}
+                        break;
+                        
+                    case 'high-tech':
+                        // Add external structural elements
+                        for (let i = 0; i < 4; i++) {{
+                            const structGeometry = new THREE.CylinderGeometry(0.5, 0.5, settings.height, 8);
+                            const structMaterial = new THREE.MeshStandardMaterial({{ 
+                                color: 0xE0E0E0,
+                                metalness: 0.8,
+                                roughness: 0.2
+                            }});
+                            const struct = new THREE.Mesh(structGeometry, structMaterial);
+                            
+                            // Position at corners
+                            const posX = (i % 2 === 0 ? 1 : -1) * (settings.width / 2 + 1);
+                            const posZ = (i < 2 ? 1 : -1) * (settings.depth / 2 + 1);
+                            
+                            struct.position.set(posX, 0, posZ);
+                            struct.castShadow = true;
+                            building.add(struct);
+                        }}
+                        break;
+                        
+                    case 'brutalist':
+                        // Add concrete protrusions
+                        for (let i = 0; i < 3; i++) {{
+                            const protrusion = new THREE.Mesh(
+                                new THREE.BoxGeometry(
+                                    settings.width * 0.4, 
+                                    settings.height * 0.15, 
+                                    settings.depth * 0.3
+                                ),
+                                buildingMaterial
+                            );
+                            protrusion.position.set(
+                                (Math.random() - 0.5) * (settings.width * 0.5),
+                                (Math.random() - 0.5) * (settings.height * 0.6),
+                                settings.depth / 2 + settings.depth * 0.15
+                            );
+                            protrusion.castShadow = true;
+                            building.add(protrusion);
+                        }}
+                        break;
+                }}
+                
+                // Add entrance
+                const entranceGeometry = new THREE.BoxGeometry(5, floorHeight, 2);
+                const entranceMaterial = settings.material === 'glass' ? 
+                    new THREE.MeshPhysicalMaterial({{ 
+                        color: colorHex,
+                        transparent: true,
+                        opacity: 0.9,
+                        metalness: 0.2,
+                        roughness: 0.05,
+                        reflectivity: 1.0
+                    }}) : 
+                    new THREE.MeshLambertMaterial({{ color: 0x424242 }});
+                
+                const entrance = new THREE.Mesh(entranceGeometry, entranceMaterial);
+                entrance.position.set(0, -settings.height / 2 + floorHeight / 2, settings.depth / 2 + 1);
+                entrance.castShadow = true;
+                building.add(entrance);
+                
+                // Add custom features
+                if (settings.custom_features.includes('solar panels') || settings.roof_style === 'green') {{
+                    const panelGeometry = new THREE.BoxGeometry(2, 0.1, 3);
+                    const panelMaterial = new THREE.MeshPhongMaterial({{ 
+                        color: 0x1A237E,
+                        shininess: 100
+                    }});
+                    
+                    for (let i = 0; i < 8; i++) {{
+                        const panel = new THREE.Mesh(panelGeometry, panelMaterial);
+                        panel.position.set(
+                            (Math.random() - 0.5) * (settings.width * 0.8),
+                            settings.height / 2 + 0.1,
+                            (Math.random() - 0.5) * (settings.depth * 0.8)
+                        );
+                        panel.rotation.x = -Math.PI / 6; // Tilt panels
+                        panel.castShadow = true;
+                        building.add(panel);
+                    }}
+                }}
+                
+                return building;
+            }}
+            
+            // Set up controls
+            const controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.screenSpacePanning = false;
+            controls.minDistance = 20;
+            controls.maxDistance = 200;
+            controls.maxPolarAngle = Math.PI / 2;
+            
+            // Set up scene
+            setupLighting(settings.time_of_day);
+            createEnvironment(settings.surroundings);
+            
+            // Create and add building
+            const building = createBuilding(settings);
+            scene.add(building);
+            
+            // Position camera
+            camera.position.set(50, 30, 50);
+            camera.lookAt(0, 0, 0);
+            
+            // Set up window resize handler
+            window.addEventListener('resize', onWindowResize, false);
+            
+            function onWindowResize() {{
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }}
+            
+            // Animation loop
+            function animate() {{
+                requestAnimationFrame(animate);
+                controls.update();
+                renderer.render(scene, camera);
+            }}
+            
+            animate();
+        </script>
+    </body>
+    </html>
+    
+    """, height=600, width=800)
+
+# Add explanation section
+with st.expander("How does the 3D rendering work?"):
+    st.markdown("""
+    ### 3D Rendering Technology
+    
+    The 3D rendering is powered by Three.js, a powerful JavaScript library for creating and displaying 3D computer graphics in web browsers. The architecture generation system uses parametric design principles, where building features are determined by a set of parameters.
+    
+    #### Key components of the rendering:
+    
+    1. **Building Generation**: The building is created based on your specifications, with customizable height, width, number of floors, and architectural style.
+    
+    2. **Environment**: The surrounding environment adapts to your selection, including urban settings with nearby buildings, waterfront areas, or mountainous landscapes.
+    
+    3. **Lighting System**: The lighting system simulates different times of day, from the warm tones of dawn or dusk to the bright clarity of daylight or the moody atmosphere of night.
+    
+    4. **Materials**: Different materials like glass, concrete, or metal are rendered with appropriate reflectivity, opacity, and surface characteristics.
+    
+    5. **Architectural Details**: Style-specific elements like balconies, roof designs, and façade treatments are parametrically generated.
+    """)
+
+# Add a features roadmap
+with st.expander("Feature Roadmap"):
+    st.markdown("""
+    ### Coming Soon
+    
+    - **Floor Plan Generator**: Create interior layouts for each floor
+    - **Material Library**: Expanded selection of building materials with realistic textures
+    - **Animation Export**: Generate fly-around animations of your building
+    - **Urban Context**: Import actual city contexts using GeoData
+    - **Collaboration Tools**: Share your designs and collaborate with others
+    - **Advanced Natural Language Processing**: More sophisticated text-to-architecture generation
+    - **VR Compatibility**: Experience your design in virtual reality
+    """)
+
+# Footer
+st.markdown('<div class="footer">', unsafe_allow_html=True)
+st.markdown("### About this Application")
+st.markdown("""
+This application demonstrates the power of combining parametric 3D architecture generation with an intuitive user interface.
+Perfect for architects, urban planners, designers, and anyone interested in exploring architectural concepts.
+""")
+st.markdown('</div>', unsafe_allow_html=True)
